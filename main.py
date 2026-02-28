@@ -1,11 +1,9 @@
 import os
 import uuid
-import aiofiles
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
-import uvicorn
 import asyncio
 
 TOKEN = os.getenv("BOT_TOKEN")
@@ -15,6 +13,8 @@ app = FastAPI()
 UPLOAD_FOLDER = "videos"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+telegram_app = ApplicationBuilder().token(TOKEN).build()
 
 @app.get("/video/{filename}")
 async def get_video(filename: str):
@@ -30,14 +30,11 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     video_link = f"{BASE_URL}/video/{unique_name}"
     await update.message.reply_text(f"Your video link:\n{video_link}")
 
-async def main():
-    application = ApplicationBuilder().token(TOKEN).build()
-    application.add_handler(MessageHandler(filters.VIDEO, handle_video))
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
+telegram_app.add_handler(MessageHandler(filters.VIDEO, handle_video))
 
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+@app.on_event("startup")
+async def startup():
+    await telegram_app.initialize()
+    await telegram_app.start()
+    asyncio.create_task(telegram_app.bot.initialize())
+    asyncio.create_task(telegram_app.updater.start_polling())
