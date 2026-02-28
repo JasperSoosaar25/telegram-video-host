@@ -58,7 +58,7 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     download_url = file.file_path
     total_size = file.file_size
     downloaded = 0
-    last_stage = -1  # track 0-10 stages (10% increments)
+    last_stage = -1  # track 10% stages
 
     async with aiohttp.ClientSession() as session:
         async with session.get(download_url) as resp:
@@ -68,7 +68,7 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     downloaded += len(chunk)
 
                     percent = int(downloaded * 100 / total_size)
-                    stage = percent // 10  # 0-10
+                    stage = percent // 10
 
                     if stage != last_stage:
                         last_stage = stage
@@ -90,8 +90,8 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await status_message.edit_text(
         f"doneeeee :3\n\n"
-        f"your cozy blue video link is:\n{link}\n\n"
-        f"me protected it carefully ;3"
+        f"your video link is:\n{link}\n\n"
+        f"me kept it safe ;3"
     )
 
 # 💙 REGISTER HANDLERS
@@ -112,7 +112,7 @@ async def webhook(request: Request):
     await telegram_app.process_update(update)
     return {"ok": True}
 
-# 💙 VIDEO PAGE (CYAN GLOW AESTHETIC)
+# 💙 DEFAULT VIDEO PAGE (NO STYLING)
 @app.get("/video/{video_id}", response_class=HTMLResponse)
 async def get_video(video_id: str):
     if video_id not in videos:
@@ -120,8 +120,8 @@ async def get_video(video_id: str):
 
     return f"""
     <html>
-        <body style="margin:0;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);display:flex;justify-content:center;align-items:center;height:100vh;">
-            <video width="90%" controls autoplay style="border-radius:18px;box-shadow:0 0 40px rgba(0,255,255,0.5);">
+        <body style="margin:0;">
+            <video width="100%" height="100%" controls autoplay>
                 <source src="/file/{video_id}" type="video/mp4">
             </video>
         </body>
