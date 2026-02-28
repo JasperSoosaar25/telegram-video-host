@@ -27,7 +27,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "me loves cyan things and cozy vibes"
     )
 
-# 💙 VIDEO HANDLER WITH REAL STREAM PROGRESS
+# 💙 VIDEO HANDLER (SAFE PROGRESS UPDATES)
 async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
@@ -58,7 +58,7 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     download_url = file.file_path
     total_size = file.file_size
     downloaded = 0
-    last_percent = -1
+    last_stage = -1  # track 0-10 stages (10% increments)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(download_url) as resp:
@@ -68,16 +68,17 @@ async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     downloaded += len(chunk)
 
                     percent = int(downloaded * 100 / total_size)
+                    stage = percent // 10  # 0-10
 
-                    if percent != last_percent:
-                        last_percent = percent
-                        filled = percent // 10
+                    if stage != last_stage:
+                        last_stage = stage
+                        filled = stage
                         bar = "🟦" * filled + "⬜" * (10 - filled)
 
                         try:
                             await status_message.edit_text(
                                 f"uploading your precious video... :3\n\n"
-                                f"[{bar}] {percent}%\n\n"
+                                f"[{bar}] {stage*10}%\n\n"
                                 f"me is wrapping it in a cyan blanket ;3"
                             )
                         except:
@@ -103,7 +104,7 @@ async def startup():
     await telegram_app.initialize()
     await telegram_app.start()
 
-# 💙 WEBHOOK
+# 💙 WEBHOOK ENDPOINT
 @app.post("/webhook")
 async def webhook(request: Request):
     data = await request.json()
@@ -111,7 +112,7 @@ async def webhook(request: Request):
     await telegram_app.process_update(update)
     return {"ok": True}
 
-# 💙 VIDEO PAGE (BLUE / CYAN GLOW THEME)
+# 💙 VIDEO PAGE (CYAN GLOW AESTHETIC)
 @app.get("/video/{video_id}", response_class=HTMLResponse)
 async def get_video(video_id: str):
     if video_id not in videos:
